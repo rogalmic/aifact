@@ -11,7 +11,7 @@ A set of AI "skills" and "runbooks" that standardize software development workfl
 
 Once you have installed the `orchestrator.md` skill into your project, you can use a prompt like this to kick off a new project from scratch:
 
-> Create an app that manages a shopping list (add, remove, show total) that has both an API backend and a statically served SPA frontend. Do not use javascript frameworks, use pure javascript (newest ECMA script supported by modern browsers). For technology use dotnet/java/typescript - ask user before implementation. To make the UI look nice, use `https://www.skills.sh/anthropics/skills/frontend-design` skill together with nice css based animations. Use sqlite for preserving state.
+> Using orchestrator skill, create an app that manages a shopping list (add, remove, show total) that has both an API backend and a statically served SPA frontend. Do not use javascript frameworks, use pure javascript (newest ECMA script supported by modern browsers). For technology use dotnet/java/typescript - ask user before implementation. To make the UI look nice, use `https://www.skills.sh/anthropics/skills/frontend-design` skill together with nice css based animations. Use sqlite for preserving state.
 
 The Orchestrator will automatically prompt you for the specific Docker images, create the containerized Makefiles, and execute the full pipeline to build, test, and document both the frontend and backend components.
 
