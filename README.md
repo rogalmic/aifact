@@ -9,25 +9,25 @@ A generic repository for AI "skills" (custom system prompts and instructions) th
 
 ## Installation
 
-You can apply these skills to any local project. The installation script will automatically configure your project for various AI tools (Cursor, GitHub Copilot CLI, Claude Code, Windsurf, etc.).
+You can apply these skills to any local project. The installation script will automatically configure your project for various AI tools by concatenating all available skills.
 
 1. Clone this repository anywhere on your machine.
-2. Run the `install.sh` script from your target project directory, pointing to the script and providing the skill name:
+2. Run the `install.sh` script from your target project directory:
 
 ```bash
 cd /path/to/my-project
-/path/to/aifact/install.sh orchestrator
+/path/to/aifact/install.sh
 ```
 
-Alternatively, you can provide the target directory as the second argument:
+Alternatively, you can provide the target directory as the first argument:
 
 ```bash
-./install.sh orchestrator /path/to/my-project
+/path/to/aifact/install.sh /path/to/my-project
 ```
 
 ### Supported AI Tools
 
-The `install.sh` script currently copies the skill instructions to:
+The `install.sh` script currently copies the combined skill instructions to:
 - `.cursorrules` (Cursor)
 - `.windsurfrules` (Windsurf)
 - `CLAUDE.md` (Claude Code)
