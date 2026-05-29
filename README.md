@@ -2,6 +2,14 @@
 
 A set of AI "skills" and "runbooks" that standardize software development workflows across different AI coding assistants. The core idea: **the host machine needs only Docker installed** — everything else runs in containers, orchestrated by the AI through Makefiles.
 
+## Quickstart Example
+
+Once you have installed the `orchestrator.md` skill into your project, you can use a prompt like this to kick off a new project from scratch:
+
+> Create an app that manages a shopping list (add, remove, show total) that has both an API backend and a statically served SPA frontend. Do not use javascript frameworks, use pure javascript (newest ECMA script supported by modern browsers). For technology use dotnet/java/typescript - ask user before implementation. To make the UI look nice, use `https://www.skills.sh/anthropics/skills/frontend-design` skill together with nice css based animations.
+
+The Orchestrator will automatically prompt you for the specific Docker images, create the containerized Makefiles, and execute the full pipeline to build, test, and document both the frontend and backend components.
+
 ## Repository Structure
 
 ```
