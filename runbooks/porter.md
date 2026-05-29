@@ -158,6 +158,7 @@ Generate a `Makefile` for each component with these required targets:
 | `unittest`   | Run unit tests                                                       |
 | `statictest` | Install dev tools, run linters/analyzers, and perform security scans |
 | `autotest`   | Run runtime automated tests (e.g., launch API and curl, run CLI)     |
+| `run`        | Start the application for interactive local development              |
 | `clean`      | Remove build artifacts                                               |
 | `deps`       | Install/restore dependencies (called automatically by `build`)       |
 
@@ -192,6 +193,9 @@ autotest:
 	curl -sf http://localhost:3000/health; RESULT=$$?; \
 	kill $$PID 2>/dev/null; exit $$RESULT
 
+run: build
+	npm start
+
 clean:
 	rm -rf node_modules dist
 ```
@@ -221,6 +225,9 @@ autotest: build
 	sleep 5; \
 	curl -sf http://localhost:5000/health; RESULT=$$?; \
 	kill $$PID 2>/dev/null; exit $$RESULT
+
+run: build
+	dotnet run --no-launch-profile
 
 clean:
 	dotnet clean
@@ -252,6 +259,9 @@ autotest:
 	curl -sf http://localhost:8080/health; RESULT=$$?; \
 	kill $$PID 2>/dev/null; exit $$RESULT
 
+run: build
+	python app.py
+
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .pytest_cache
@@ -281,6 +291,9 @@ autotest: build
 	curl -sf http://localhost:8080/health; RESULT=$$?; \
 	kill $$PID 2>/dev/null; exit $$RESULT
 
+run: build
+	./myapp
+
 clean:
 	go clean
 ```
@@ -308,6 +321,9 @@ autotest:
 	sleep 5; \
 	curl -sf http://localhost:8080/health; RESULT=$$?; \
 	kill $$PID 2>/dev/null; exit $$RESULT
+
+run: build
+	java -jar target/myapp.jar
 
 clean:
 	mvn clean -q
