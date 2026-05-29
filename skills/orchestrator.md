@@ -17,7 +17,7 @@ A project is being created from scratch. You will scaffold everything including 
 The project was previously created or ported with the Orchestrator. Documentation and Makefiles already exist. Read `STACK.md` to understand the technology stack and structure before making changes.
 
 > [!NOTE]
-> **Porting** an existing project is handled by the separate **Port skill** (`port.md`). After porting completes, all future work uses this skill in Mode B.
+> **Porting** an existing project is handled by the separate **Porter runbook** (`runbooks/porter.md`). After porting completes, all future work uses this skill in Mode B.
 
 ---
 
