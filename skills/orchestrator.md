@@ -176,6 +176,9 @@ Standard invocation pattern:
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$(pwd)":/app -w /app <image> make <target>
 ```
 
+> [!TIP]
+> When executing the `run` target for interactive manual testing, remember to expose the application's port using `-p <host_port>:<container_port>` (e.g., `-p 8080:8080`).
+
 ### Step A: Generate Makefile
 Auto-generate a `Makefile` at the component root. The Makefile is auto-generated and auto-maintained by the Orchestrator — the user does not need to edit it manually. **Makefiles must be committed to git** so they persist across runs.
 
@@ -341,6 +344,7 @@ Adapt these templates to the specific project. If the project already has a buil
 ### Step B: Implement
 - Implement the solution following coding standards for the given platform.
 - Follow existing patterns in the codebase when in `update` mode.
+- **Critical Docker Networking Rule:** Any web servers or APIs scaffolded or modified must explicitly bind to `0.0.0.0` (all interfaces), not `127.0.0.1` or `localhost`. Otherwise, they will be completely unreachable from the host machine when port forwarding.
 
 ### Step C: Build
 - Verify the code builds cleanly with **zero warnings**.
