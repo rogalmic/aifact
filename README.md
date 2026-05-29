@@ -2,6 +2,11 @@
 
 A set of AI "skills" and "runbooks" that standardize software development workflows across different AI coding assistants. The core idea: **the host machine needs only Docker installed** — everything else runs in containers, orchestrated by the AI through Makefiles.
 
+## Prerequisites
+
+- **Linux or macOS**: Docker and Git must be installed.
+- **Windows**: You **must** use WSL2 (Windows Subsystem for Linux). Docker and Git must be installed and running *inside* your WSL2 distribution. Native Windows paths (PowerShell/CMD) are not supported.
+
 ## Quickstart Example
 
 Once you have installed the `orchestrator.md` skill into your project, you can use a prompt like this to kick off a new project from scratch:
