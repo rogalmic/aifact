@@ -56,7 +56,10 @@ The user must select the technology. Follow this process:
 #### Step 1: Ask the user what technology/platform they want
 Examples: Node.js, .NET, Go, Rust, Java, Python, etc.
 
-#### Step 2: Query available Docker SDK image versions
+#### Step 2: Ask the user for the version of the technology
+Once the technology is selected, ask the user which version to use (e.g., .NET 8.0, Node.js 20, Python 3.12). **Do not assume a version.** This version will determine the docker image used across multiple steps.
+
+#### Step 3: Query available Docker SDK image versions
 Use the Docker Hub API or Microsoft Container Registry API to fetch available tags for the corresponding SDK image:
 
 **Docker Hub images** (node, golang, rust, python, ruby, php, gcc, maven, gradle, dart, elixir, etc.):
@@ -71,7 +74,7 @@ https://mcr.microsoft.com/v2/dotnet/sdk/tags/list
 
 Filter the results to show only meaningful SDK versions (exclude `latest`, nightly, RC, and architecture-specific tags). Prefer `-slim` variants when available.
 
-#### Step 3: Present versions to the user and let them choose
+#### Step 4: Present versions to the user and let them choose
 Present the versions to the user. **Never assume a version.** Follow this approach:
 
 1. Show the **top 10 most relevant versions** (latest stable releases first).
@@ -80,7 +83,7 @@ Present the versions to the user. **Never assume a version.** Follow this approa
    - **"Enter image manually"** — if selected, ask the user to type the full Docker image reference (e.g., `node:18.19-bullseye-slim`). This allows using custom/private images or specific variants not in the default list.
 3. Let the user pick the exact version they want.
 
-#### Step 4: Record the selection in `STACK.md`
+#### Step 5: Record the selection in `STACK.md`
 
 **Common image name patterns per technology:**
 
@@ -168,6 +171,7 @@ For each component, execute these steps **in order**.
 - **Always** use `--rm` to auto-remove containers.
 - **Always** use `--user "$(id -u):$(id -g)" -e HOME=/tmp` to prevent files owned by root on the host. Setting `HOME=/tmp` ensures tools that write to the home directory (e.g., Maven's `~/.m2`, npm's `~/.npm`) work correctly even when the mapped UID has no home directory inside the container.
 - **Never** install anything on the host.
+- **Never** run framework-specific commands (like `dotnet new`, `npm init`, `go mod init`) on the host. Always run them inside Docker.
 - Set working directory to the component root before running docker commands (e.g., `cd backend && docker run ...`).
 - **`make` availability:** Many SDK images (e.g., `maven`, `gradle`, slim variants of `node`) do not ship with `make`. If `make` is not available in the chosen image, prepend installation to the docker command: `bash -c "apt-get update && apt-get install -y make && make <target>"`. Alternatively, call the underlying build commands directly (e.g., `mvn compile` instead of `make build`).
 
@@ -342,6 +346,7 @@ Adapt these templates to the specific project. If the project already has a buil
 > The `autotest` smoke test pattern must use `$$!` to capture the background PID and `kill $$PID` to terminate it. Do **not** use shell job control (`%1`) — it is unreliable in non-interactive shells and inside Docker containers.
 
 ### Step B: Implement
+- **Crucial Rule for Scaffolding:** If you are generating a new project (e.g., `dotnet new`, `npm create`, `cargo new`), you **MUST** execute these commands inside a Docker container using the selected image. **Never** run framework-specific CLI tools directly on the host machine. Example: `docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$(pwd)":/app -w /app <image> dotnet new console`
 - Implement the solution following coding standards for the given platform.
 - Follow existing patterns in the codebase when in `update` mode.
 - **Critical Docker Networking Rule:** Any web servers or APIs scaffolded or modified must explicitly bind to `0.0.0.0` (all interfaces), not `127.0.0.1` or `localhost`. Otherwise, they will be completely unreachable from the host machine when port forwarding.

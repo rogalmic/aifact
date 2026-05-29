@@ -338,6 +338,7 @@ Adapt these templates to the specific project structure and existing build syste
 - Always use `--rm`.
 - Use `--user "$(id -u):$(id -g)"` for `build`, `test`, and `autotest`.
 - Omit `--user` for `statictest` since dev tool installation may require root inside the container.
+- **Never** run framework-specific commands on the host. Always run them inside Docker.
 
 1. For each component, run:
    ```bash
