@@ -18,6 +18,11 @@ A project is being created from scratch. You will scaffold everything including 
 ### Mode B: Update Existing Project
 The project was previously created or ported with the Orchestrator. Documentation and Makefiles already exist. Read `STACK.md` to understand the technology stack and structure before making changes.
 
+**Pipeline scope in Mode B:** Not every change requires the full pipeline. Run only the steps relevant to the change:
+- **Source code changes**: run the full pipeline (build → test → review → document).
+- **Documentation-only changes** (README, comments): skip build and test steps.
+- **Configuration changes** (Makefile, dependencies): run build and tests, skip review.
+
 > [!NOTE]
 > **Porting** an existing project is handled by the separate **Porter runbook** (`runbooks/porter.md`). After porting completes, all future work uses this skill in Mode B.
 
@@ -217,15 +222,107 @@ statictest:
 	export PATH="$$PATH:$$HOME/.dotnet/tools" && dotnet-security-scan . 2>&1
 
 autotest: build
-	# Example runtime test: Start the app in background, hit health endpoint, kill app
-	timeout 10 dotnet run --no-launch-profile & sleep 3 && curl -sf http://localhost:5000/health && kill %1 || echo "Smoke test skipped or failed"
+	dotnet run --no-launch-profile & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:5000/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	dotnet clean
 	rm -rf bin obj
 ```
 
+**Node.js / TypeScript:**
+```makefile
+.PHONY: build unittest statictest autotest clean deps
+
+deps:
+	npm ci
+
+build: deps
+	npm run build
+
+unittest: deps
+	npm test
+
+statictest:
+	npm ci
+	npx eslint .
+	npx prettier --check .
+
+autotest: build
+	npm start & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:3000/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
+
+clean:
+	rm -rf node_modules dist
+```
+
+**Python:**
+```makefile
+.PHONY: build unittest statictest autotest clean deps
+
+deps:
+	pip install -r requirements.txt
+
+build: deps
+	python -m py_compile $$(find . -name '*.py')
+
+unittest: deps
+	python -m pytest tests/
+
+statictest:
+	pip install -r requirements.txt flake8 bandit mypy
+	flake8 .
+	bandit -r . -ll
+	mypy . --ignore-missing-imports
+
+autotest: build
+	python app.py & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:8080/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
+
+clean:
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	rm -rf .pytest_cache
+```
+
+**Go:**
+```makefile
+.PHONY: build unittest statictest autotest clean deps
+
+deps:
+	go mod download
+
+build: deps
+	go build -o app ./...
+
+unittest:
+	go test ./... -v
+
+statictest:
+	go vet ./...
+	go install honnef.co/go/tools/cmd/staticcheck@latest && staticcheck ./...
+	go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...
+
+autotest: build
+	./app & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:8080/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
+
+clean:
+	go clean
+	rm -f app
+```
+
 Adapt these templates to the specific project. If the project already has a build system, **wrap it** — do not fight it. After implementing code (Step B), review and update the Makefile if the project structure differs from what was assumed.
+
+> [!IMPORTANT]
+> The `autotest` smoke test pattern must use `$$!` to capture the background PID and `kill $$PID` to terminate it. Do **not** use shell job control (`%1`) — it is unreliable in non-interactive shells and inside Docker containers.
 
 ### Step B: Implement
 - Implement the solution following coding standards for the given platform.
@@ -237,20 +334,7 @@ Adapt these templates to the specific project. If the project already has a buil
 - If the build fails, analyze the error, fix the code, and retry.
 - **Retry up to 3 times.** If still failing after 3 attempts, report the error to the user and ask for guidance.
 
-### Step D: Review
-Perform a thorough code review:
-- **Consistency**: Code follows project conventions and style.
-- **Completeness**: All requirements addressed; no TODO stubs.
-- **Security**: No hardcoded secrets, credentials, API keys, tokens. No OWASP Top 10 vulnerabilities.
-- **Best Practices**: Error handling, input validation, proper logging.
-
-### Step E: Document
-- Update `README.md` if the feature changes usage or setup.
-- Update `ARCHITECTURE.md` if new components or design changes are introduced.
-- Update `STACK.md` if new technologies or components are added.
-- Add an entry to `CHANGELOG.md` under `[Unreleased]` (Added / Changed / Fixed / Removed).
-
-### Step F: Unit Tests
+### Step D: Unit Tests
 - Create unit tests covering the business logic of implemented changes.
 - All tests **must pass**.
 - Run: `docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$(pwd)":/app -w /app <image> make unittest`
@@ -262,7 +346,7 @@ Perform a thorough code review:
   - Date/time of the last run.
   - Overall coverage summary if available.
 
-### Step G: Static Tests
+### Step E: Static Tests
 - Run linters, static analysis, and security scanners via the `statictest` Makefile target.
 - Run (without `--user`, since dev tools may need root to install):
   ```bash
@@ -279,7 +363,7 @@ Perform a thorough code review:
   - Resolution status for each issue (fixed / accepted by user / deferred).
   - Date/time of the last run.
 
-### Step H: Automated Tests
+### Step F: Automated Tests
 - **Attempt to run the product** inside the container and perform automated runtime tests via the `autotest` Makefile target (e.g., start a server and curl endpoints, run a CLI command, execute a basic workflow).
 - Run:
   ```bash
@@ -290,6 +374,19 @@ Perform a thorough code review:
   - Output summary from runtime tests.
   - Results of whether the product was started and interacted with successfully, or why runtime testing was not possible.
   - Date/time of the last run.
+
+### Step G: Review
+Perform a thorough code review:
+- **Consistency**: Code follows project conventions and style.
+- **Completeness**: All requirements addressed; no TODO stubs.
+- **Security**: No hardcoded secrets, credentials, API keys, tokens. No OWASP Top 10 vulnerabilities.
+- **Best Practices**: Error handling, input validation, proper logging.
+
+### Step H: Document
+- Update `README.md` if the feature changes usage or setup.
+- Update `ARCHITECTURE.md` if new components or design changes are introduced.
+- Update `STACK.md` if new technologies or components are added.
+- Add an entry to `CHANGELOG.md` under `[Unreleased]` (Added / Changed / Fixed / Removed).
 
 ---
 

@@ -187,8 +187,10 @@ statictest:
 	npx prettier --check .
 
 autotest:
-	# Example runtime test: Start the app in background, hit health endpoint, kill app
-	timeout 10 npm start & sleep 3 && curl -sf http://localhost:3000/health && kill %1 || echo "Smoke test skipped or failed"
+	npm start & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:3000/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	rm -rf node_modules dist
@@ -215,8 +217,10 @@ statictest:
 	export PATH="$$PATH:$$HOME/.dotnet/tools" && dotnet-security-scan . 2>&1
 
 autotest: build
-	# Example runtime test: Start the app in background, hit health endpoint, kill app
-	timeout 10 dotnet run --no-launch-profile & sleep 3 && curl -sf http://localhost:5000/health && kill %1 || echo "Smoke test skipped or failed"
+	dotnet run --no-launch-profile & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:5000/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	dotnet clean
@@ -243,8 +247,10 @@ statictest:
 	mypy . --ignore-missing-imports
 
 autotest:
-	# Example runtime test
-	timeout 10 python app.py & sleep 3 && curl -sf http://localhost:8080/health && kill %1 || echo "Smoke test skipped or failed"
+	python app.py & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:8080/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
@@ -270,7 +276,10 @@ statictest:
 	go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...
 
 autotest: build
-	timeout 10 ./myapp & sleep 3 && curl -sf http://localhost:8080/health && kill %1 || echo "Smoke test skipped or failed"
+	./myapp & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:8080/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	go clean
@@ -295,7 +304,10 @@ statictest:
 	mvn spotbugs:check 2>&1 || echo "SpotBugs not configured — skipping"
 
 autotest:
-	timeout 10 java -jar target/myapp.jar & sleep 3 && curl -sf http://localhost:8080/health && kill %1 || echo "Smoke test skipped or failed"
+	java -jar target/myapp.jar & PID=$$!; \
+	sleep 5; \
+	curl -sf http://localhost:8080/health; RESULT=$$?; \
+	kill $$PID 2>/dev/null; exit $$RESULT
 
 clean:
 	mvn clean -q
